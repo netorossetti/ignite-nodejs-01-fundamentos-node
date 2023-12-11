@@ -1,9 +1,21 @@
+import http from "node:http";
+import { Transform } from "node:stream";
 import { randomUUID } from "node:crypto";
 import { Database } from "./database.js";
 import { buildRoutePath } from "./utils/build-route-path.js";
 import { z } from "zod";
 
 const database = new Database();
+
+class InverseNumberStream extends Transform {
+  _transform(chunk, encoding, callback) {
+    const transformed = Number(chunk.toString()) * -1;
+
+    console.log(transformed);
+
+    callback(null, Buffer.from(String(transformed)));
+  }
+}
 
 export const routes = [
   {
@@ -137,7 +149,7 @@ export const routes = [
       });
       const validateSchemaParams = schemaParams.safeParse(req.params);
       if (!validateSchemaParams.success)
-        return res.writeHead(404).end("Invalid id.");
+        return res.writeHead(400).end("Invalid id.");
 
       // Recuperar ID do parametro do request
       const { id } = validateSchemaParams.data;
@@ -156,4 +168,18 @@ export const routes = [
       return res.writeHead(204).end();
     },
   },
+  // {
+  //   method: "POST",
+  //   path: buildRoutePath("/tasks/import-csv"),
+  //   handler: async (req, res) => {
+  //     if (
+  //       !(req instanceof http.IncomingMessage) ||
+  //       !(res instanceof http.ServerResponse)
+  //     )
+  //       return res.writeHead(404).end("Not Found");
+
+  //     console.log("/tasks/import-csv");
+  //     return req.pipe(new InverseNumberStream()).pipe(res);
+  //   },
+  // },
 ];
